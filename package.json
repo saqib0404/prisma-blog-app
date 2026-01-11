@@ -29,7 +29,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx tsx watch src/server.ts"
+    "dev": "npx tsx watch src/server.ts",
+    "seed:admin": "npx tsx src/script/seedAdmin.ts"
   },
   "keywords": [],
   "author": "",
