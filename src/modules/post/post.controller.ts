@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import { postService } from "./post.server"
-import { PostStatus } from "../../generated/prisma/enums"
+import { PostStatus } from "../../../generated/prisma/enums"
+import paginationSortingHelper from "../../helpers/paginationSortingHelper"
 
 const createPost = async (req: Request, res: Response) => {
     try {
@@ -40,8 +41,36 @@ const getAllPosts = async (req: Request, res: Response) => {
 
         const authorId = req.query.authorId as string | undefined
 
-        const result = await postService.getAllPosts({ search: searchString, tags, isFeatured, status, authorId })
+        const options = paginationSortingHelper(req.query)
+
+        const result = await postService.getAllPosts
+            ({
+                search: searchString,
+                tags,
+                isFeatured,
+                status,
+                authorId,
+                ...options
+            })
         res.status(201).json(result)
+    } catch (error: any) {
+        res.status(400).json({
+            success: false,
+            message: error?.name,
+            details: error
+        })
+    }
+}
+
+const getPostById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+        if (!id) {
+            throw new Error("Post Id Not Found")
+        }
+
+        const result = await postService.getPostById(id)
+        res.status(200).json(result)
     } catch (error: any) {
         res.status(400).json({
             success: false,
@@ -53,5 +82,6 @@ const getAllPosts = async (req: Request, res: Response) => {
 
 export const PostController = {
     createPost,
-    getAllPosts
+    getAllPosts,
+    getPostById
 }
