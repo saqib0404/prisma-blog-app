@@ -11,6 +11,8 @@ router.post('/', auth(UserRole.USER, UserRole.ADMN), commentController.createCom
 
 router.patch('/:commentId', auth(UserRole.USER, UserRole.ADMN), commentController.updateUpdate)
 
+router.patch('/moderate/:commentId', auth(UserRole.ADMN), commentController.moderateComment)
+
 router.delete("/:commentId", auth(UserRole.USER, UserRole.ADMN), commentController.deleteComment)
 
 export const commentRouter = router;
