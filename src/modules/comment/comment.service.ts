@@ -132,15 +132,6 @@ const moderateComment = async (id: string, payload: { status: CommentStatus }) =
     })
 }
 
-const getMyPosts = async (authorId: string) => {
-    const result = await prisma.post.findMany({
-        where: {
-            authorId
-        }
-    })
-    return result
-}
-
 export const commentService = {
     createComment,
     getCommentById,
@@ -148,5 +139,4 @@ export const commentService = {
     deleteComment,
     updateUpdate,
     moderateComment,
-    getMyPosts
 }
