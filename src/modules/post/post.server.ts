@@ -170,6 +170,49 @@ const getPostById = async (id: string) => {
     return result
 }
 
+const getStats = async () => {
+    return await prisma.$transaction(async (tx) => {
+        const [
+            totalPosts,
+            publishedPosts,
+            draftPosts,
+            archivedPosts,
+            totalComments,
+            approvedComments,
+            totalUsers,
+            adminCount,
+            userCount,
+            totalViews
+        ] = await Promise.all([
+            await tx.post.count(),
+            await tx.post.count({ where: { status: PostStatus.PUBLISHED } }),
+            await tx.post.count({ where: { status: PostStatus.DRAFT } }),
+            await tx.post.count({ where: { status: PostStatus.ARCHEVED } }),
+            await tx.comment.count(),
+            await tx.comment.count({ where: { status: CommentStatus.APPROVED } }),
+            await tx.user.count(),
+            await tx.user.count({ where: { role: "ADMIN" } }),
+            await tx.user.count({ where: { role: "USER" } }),
+            await tx.post.aggregate({
+                _sum: { views: true }
+            })
+        ])
+
+        return {
+            totalPosts,
+            publishedPosts,
+            draftPosts,
+            archivedPosts,
+            totalComments,
+            approvedComments,
+            totalUsers,
+            adminCount,
+            userCount,
+            totalViews: totalViews._sum.views
+        }
+    })
+}
+
 const getMyPosts = async (authorId: string) => {
     await prisma.user.findUniqueOrThrow({
         where: {
@@ -199,9 +242,64 @@ const getMyPosts = async (authorId: string) => {
     return result
 }
 
+const updatePost = async (postId: string, payload: Partial<Post>, authorId: string, isAdmin: boolean) => {
+    const postData = await prisma.post.findUniqueOrThrow({
+        where: {
+            id: postId
+        },
+        select: {
+            id: true,
+            authorId: true
+        }
+    })
+
+    if (!isAdmin && (postData.authorId !== authorId)) {
+        throw new Error("You are not the creator of the post")
+    }
+
+    if (!isAdmin) {
+        delete payload.isFeatured
+    }
+
+    const result = await prisma.post.update({
+        where: {
+            id: postId
+        },
+        data: payload
+    })
+    return result
+}
+
+const deletePost = async (postId: string, authorId: string, isAdmin: boolean) => {
+    const postData = await prisma.post.findUniqueOrThrow({
+        where: {
+            id: postId
+        },
+        select: {
+            id: true,
+            authorId: true
+        }
+    })
+
+    if (!isAdmin && (postData.authorId !== authorId)) {
+        throw new Error("You are not the creator of the post")
+    }
+
+    const result = await prisma.post.delete({
+        where: {
+            id: postId
+        }
+    })
+    return result
+}
+
+
 export const postService = {
     createPost,
     getAllPosts,
     getPostById,
-    getMyPosts
+    getMyPosts,
+    updatePost,
+    deletePost,
+    getStats
 }
