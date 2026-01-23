@@ -4,6 +4,7 @@ import { auth } from "./lib/auth";
 import cors from "cors";
 import { postRouter } from "./modules/post/post.router";
 import { commentRouter } from "./modules/comment/comment.router";
+import errorHandler from "./middlewares/globalErrorEandler";
 
 const app: Application = express();
 
@@ -20,5 +21,7 @@ app.all('/api/auth/{*any}', toNodeHandler(auth));
 app.use("/posts", postRouter)
 
 app.use("/comments", commentRouter)
+
+app.use(errorHandler)
 
 export { app }

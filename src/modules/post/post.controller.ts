@@ -1,10 +1,10 @@
-import { Request, Response } from "express"
+import { NextFunction, Request, Response } from "express"
 import { postService } from "./post.server"
 import { PostStatus } from "../../../generated/prisma/enums"
 import paginationSortingHelper from "../../helpers/paginationSortingHelper"
 import { UserRole } from "../../middlewares/auth.middleware"
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.user?.id) {
             return res.status(400).json({
@@ -15,11 +15,7 @@ const createPost = async (req: Request, res: Response) => {
         const result = await postService.createPost(req.body, req.user.id)
         res.status(201).json(result)
     } catch (error: any) {
-        res.status(400).json({
-            success: false,
-            message: error?.name,
-            details: error
-        })
+        next(error)
     }
 }
 
@@ -112,7 +108,7 @@ const getMyPosts = async (req: Request, res: Response) => {
     }
 }
 
-const updatePost = async (req: Request, res: Response) => {
+const updatePost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
         if (!user) {
@@ -123,12 +119,7 @@ const updatePost = async (req: Request, res: Response) => {
         const result = await postService.updatePost(postId as string, req.body, user.id, isAdmin)
         res.status(200).json(result)
     } catch (error: any) {
-        const errorMsg = (error instanceof Error) ? error.message : "posts update Failed"
-        res.status(400).json({
-            success: false,
-            message: errorMsg,
-            details: error
-        })
+        next(error)
     }
 }
 
